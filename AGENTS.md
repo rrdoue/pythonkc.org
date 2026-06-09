@@ -2,31 +2,20 @@
 
 ## Project Overview
 
-Develop or add features to an existing web application using Python, Quart, JavaScript, and other technologies listed below. The application hosts a social group that meets on a monthly or quarterly basis at various locations for a few hours. The basic application allows users to view upcoming meetings and their location. Additional functionality may be added as requirements and resources are available.
+This web application hosts a social group that meets on a monthly or quarterly basis at various locations for a few hours. The basic application allows users to view upcoming meetings and their location. Through controlled access, group members can add users, access and manage group events, including scheduling and modifying events, and manage event locations.
 
- The application enables a group of people to add users with controlled access, access and manage group events, including scheduling and modifying events, and add and relate event locations to the events. The application uses Python and Quart for the backend. The UI uses HTML, JavaScript, Jinja Templates and Tailwind CSS. The Quart backend communicates with the UI using web sockets.
-
-### Home Page Layout
-
-The home or index page has the following menu layout across the top of the page:
-
-- Home
-- About PyKC
-- Events
-- Venues
-- Members
+AI may be used to add functionality to or resolve problems with the existing application based on Python, Quart, and JavaScript. The entire application is hosted as a single Quart application, where Quart Blueprints and WebSocket functionality is used in the presentation layer for backend and frontend communications. The UI uses HTML, JavaScript, Jinja Templates and Tailwind CSS. DO NOT make any changes that would affect the architecture or modify the UI layout.
 
 ## Features
 
-- Display a list of events and their locations for normal users.
-  - Allow users to optionally add and update their attendance for an event.
-- Display the same list of events for which an Event Manager can add, delete, and modify events. Allow for deletion of multiple events.
-- Display a list of locations for users.
-- Display the same list of locations for which an Event Manager can add, delete, and modify locations.
-- From the Events page, allow an Event Manager to relate a location to an event or change an event location.
+- Display a list of PyKC events and their locations for Members' information about meetings and their location.
+- Display the same list of events for which an Event Manager can add, delete, and modify events. Enforce a one-to-one relationship between an event and a location. Allow for deletion of multiple events.
+- Display a list of locations for which an Event Manager can add, delete, and modify locations.
+- From the Events page, allow an Event Manager to add or change an event location.
 - Control user access using the following access groups:
   - Developer
   - Event Manager
+  - Member
   - Moderator
   - Organizer
 
@@ -34,7 +23,7 @@ The home or index page has the following menu layout across the top of the page:
 
 - Python 3.12+
 - Quart and supporting ASGI technologies
-- SQLite and aiosqlite for data storage
+- SQLite, aiosqlite, and SQLAlchemy Core through grammdb for data storage
 - Jinja Templates
 - Tailwind CSS
 - HTML
@@ -46,8 +35,8 @@ The home or index page has the following menu layout across the top of the page:
 - aiohttp
 - aiosqlite
 - argon2-cffi
-- grammdb
-- grammlog
+- grammdb (reference <https://grammacc.github.io/grammdb>)
+- grammlog (reference <https://grammacc.github.io/grammlog>)
 - hypercorn
 - pyjwt
 - quart
@@ -57,55 +46,45 @@ The home or index page has the following menu layout across the top of the page:
 
 ### Key Principles
 
-- Write clear, technical responses with precise Quart examples.
-- Use Quart's built-in features and tools wherever possible to leverage its full capabilities.
-- Prioritize readability and maintainability.
-- Use descriptive variable and function names; adhere to naming conventions (for example, lowercase with underscores for functions and variables).
-- Structure the project in a modular way using Quart apps to promote reusability and separation of concerns.
+- Write clear, technical responses using precise examples for the technology used.
+- Use descriptive variable and function names, adhering to Python naming conventions (for example, lowercase with underscores for functions and variables).
 
 ### Quart/Python
 
-- Use Quart's route decorators for routing; leverage blueprints for organizing related endpoints.
-- Leverage the asynchronous version of SQLAlchemy's ORM for database interactions; avoid raw SQL queries unless necessary for performance.
-- Implement custom authentication using JWT via Quart-Session or similar; avoid Django's built-in user model.
-- Use Quart's request validation with libraries such as marshmallow for form handling and validation.
-- Follow the MVC pattern (Model-View-Controller) for clear separation of concerns.
-- Use Quart with Jinja templates and native web sockets functionality for controller and UI communications.
+- Application routes are registered and managed using helper functions found in src/pykc/pl/routes.py. Do not use Quart's built-in route decorators.
+- This project uses only the core components of SQLAlchemy for the flexibility of using multiple database vendors. The project uses the grammdb library for queries, connections, and transactions. Do not modify the grammdb library or the project's SQL.
+- Form validation uses a custom implementation including the src/pykc/pl/validation package and src/pkc/pl/dtos.py module.
+- The application uses Quart with Jinja templates and native WebSockets functionality for Backend API and UI communications.
 
 ### Error Handling and Validation
 
-- Implement error handling at the view level using Quart's error handlers.
-- Use Quart's request validation with libraries such as marshmallow to validate form and model data.
-- Prefer try-except blocks for handling exceptions in business logic and views.
-- Customize error pages (for example, 404, 500) to improve user experience and provide helpful information.
-- Use Quart signals to decouple error handling and logging from core business logic for HTTP request lifecycle events as applicable.
+- Implement error handling as close to the source of the error as possible, including handling errors in the business logic.
+- In general, the application should return errors as values if the error is recoverable and only raise an exception if it's a crash condition for the application. Helper functions for wrapping exceptions and returning errors or re-raising categorized exceptions are located in the src/sl/errors.py module.
 
 ### Security Guidelines
 
-- Apply Quart security best practices for CSRF protection, SQL injection prevention, and XSS prevention.
-- Use Quart's built-in tools for testing to ensure code quality and reliability.
-- Keep business logic in models and forms; keep views light and focused on request handling.
-
-### Performance Optimization
-
-- Optimize static file handling with Quart's static file management.
+- The application handles CSRF attacks using JWTs for CSRF tokens to prevent XSS and the application uses an input validation layer. Refer to the following OWASP guideline for more background applicable to this application:  https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html.
+- Do not change any of the authentication functionality unless requested. 
 
 ### Key Conventions
 
-1. Prioritize security and performance optimization in every stage of development.
-2. Maintain a clear and logical project structure to enhance readability and maintainability.
+1. Prioritize security and performance in every stage of development.
+2. The project structure is a decoupled architecture that includes the following layers:
+   a. The User Interface contains forms that capture user input, handle basic visual formatting, and validate user experience, such as highlighting an empty required field. The forms should be declarative in their design, with their structure and validation rules written as descriptive rules within the HTML. Avoid JavaScript that processes the inputs prior to submission.
+   b. The Presentation Layer performs validation, data sanitation, and error mapping.
+   c. The Service Layer executes business logic. The layer, functioning as the backend, should process all incoming requests the same way, regardless of their origin. This layer communicates programmatically with the Presentation Layer using src/pykc/pl/dtos.py and with the Data Layer using src/pykc/sl/structs.py.
+   d. The Data Layer contains the database objects including schema and table names, aliases, and complex queries, and two database connections.
 
 ### Markdown Standards
 
 - Always run markdownlint on any markdown files created or edited.
-- Install using: `npx markdownlint-cli`
-- Fix all linting issues before completing the task
+- Fix all linting issues before completing the task.
 
 ### Testing Preferences
 
-- Write all Python tests as `pytest` style functions, not unittest classes.
+- Use pytest for all testing. Write all Python tests as `pytest` style functions, not unittest classes. Use Quart's test client test_client() method which simulates asynchronous http client requests to the application. Use the pytest-asyncio extension to handle the event loop.
 - Use descriptive function names starting with `test_`.
-- Prefer fixtures over setup/teardown methods
+- Prefer fixtures over setup/teardown methods.
 - Use assert statements directly, not self.assertEqual.
 
 ### Testing Approach
