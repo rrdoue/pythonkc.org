@@ -9,7 +9,7 @@ AI may be used to add functionality to or resolve problems with the existing app
 ## Features
 
 - Display a list of PyKC events and their locations for Members' information about meetings and their location.
-- Display the same list of events for which an Event Manager can add, delete, and modify events. Enforce a one-to-one relationship between an event and a location. Allow for deletion of multiple events.
+- Display the same list of events for which an Event Manager can add, delete, and modify events. Allow for deletion of multiple events.
 - Display a list of locations for which an Event Manager can add, delete, and modify locations.
 - From the Events page, allow an Event Manager to add or change an event location.
 - Control user access using the following access groups:
@@ -53,7 +53,7 @@ AI may be used to add functionality to or resolve problems with the existing app
 
 - Application routes are registered and managed using helper functions found in src/pykc/pl/routes.py. Do not use Quart's built-in route decorators.
 - This project uses only the core components of SQLAlchemy for the flexibility of using multiple database vendors. The project uses the grammdb library for queries, connections, and transactions. Do not modify the grammdb library or the project's SQL.
-- Form validation uses a custom implementation including the src/pykc/pl/validation package and src/pkc/pl/dtos.py module.
+- Form validation uses a custom implementation including the src/pykc/pl/validation package and src/pykc/pl/dtos.py module.
 - The application uses Quart with Jinja templates and native WebSockets functionality for Backend API and UI communications.
 
 ### Error Handling and Validation
